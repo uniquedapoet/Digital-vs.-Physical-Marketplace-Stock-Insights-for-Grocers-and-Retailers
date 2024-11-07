@@ -243,7 +243,8 @@ def add_columns(stock_df: pd.DataFrame
 
 
 def plot_closing_price(df: pd.DataFrame,
-                       opacity: int = 1
+                       opacity: int = 1,
+                       window: list = ['2024-01-01', '2024-10-01']
                        ) -> alt.Chart:
     """
     Plots the closing price of a stock over time.
@@ -256,9 +257,14 @@ def plot_closing_price(df: pd.DataFrame,
     Returns:
     chart (altair.Chart): Altair line chart of the closing
     """
-    company = df['Symbol'].iloc[0]
-    filtered_df = df[df['Symbol'] == company]
-    chart = alt.Chart(filtered_df).mark_line(color='black', opacity=opacity).encode(
+    company = df['Symbol'].iloc[0]    
+    df['Date'] = pd.to_datetime(df['Date'])
+    start = pd.to_datetime(window[0])
+    stop = pd.to_datetime(window[1])
+    df = df[df['Date'] >= start]
+    df = df[df['Date'] <= stop]
+
+    chart = alt.Chart(df).mark_line(color='black', opacity=opacity).encode(
         alt.X('Date:T', title='Date'),
         alt.Y('Close:Q', title='Closing Price'),
         alt.Tooltip(['Date:T', 'Close:Q', 'Volume:Q']),
