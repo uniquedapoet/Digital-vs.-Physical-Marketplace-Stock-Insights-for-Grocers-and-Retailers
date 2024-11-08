@@ -78,7 +78,7 @@ def add_columns(stock_df: pd.DataFrame
 
     # Create new columns with Moving Averages and Standard Deviations
     stock_df.reset_index(inplace=True)
-    stock_df['Date'] = pd.to_datetime(stock_df['Date'])
+    # stock_df['Date'] = pd.to_datetime(stock_df['Date'])
     # stock_df['Symbol'] = stock_df['St']
     stock_df['MA_10'] = stock_df.groupby('Symbol')['Close'].rolling(
         window=10).mean().reset_index(level=0, drop=True)
@@ -251,30 +251,27 @@ def plot_closing_price(df: pd.DataFrame,
 
     Parameters:
     df (DataFrame): DataFrame containing stock data
-    company (str): Company stock symbol
-    opacity (float): Opacity of the line plot
+    opacity (int): Opacity of the line in the plot
+    window (list): Date range for the plot
 
     Returns:
-    chart (altair.Chart): Altair line chart of the closing
+    chart (altair.Chart): Altair line chart of the closing price
     """
     company = df['Symbol'].iloc[0]    
-    df['Date'] = pd.to_datetime(df['Date'])
+    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
     start = pd.to_datetime(window[0])
     stop = pd.to_datetime(window[1])
     df = df[df['Date'] >= start]
     df = df[df['Date'] <= stop]
 
     chart = alt.Chart(df).mark_line(color='black', opacity=opacity).encode(
-        alt.X('Date:T', title='Date'),
-        alt.Y('Close:Q', title='Closing Price'),
-        alt.Tooltip(['Date:T', 'Close:Q', 'Volume:Q']),
+        x='Date:T',
+        y='Close:Q',
+        tooltip=['Date:T', 'Close:Q']
     ).properties(
-        title=f'{company} Closing Price',
-        width=800,
-        height=400
-    ).interactive(
-        bind_y=False
+        title=f'Closing Prices of {company}'
     )
+
     return chart
 
 
@@ -297,7 +294,7 @@ def plot_candlestick(df: pd.DataFrame,
     """
     # Fileter data to specified stock and date range
     company = df['Symbol'].iloc[0]
-    df['Date'] = pd.to_datetime(df['Date'])
+    # df['Date'] = pd.to_datetime(df['Date'])
     start = pd.to_datetime(window[0])
     stop = pd.to_datetime(window[1])
     df = df[df['Date'] >= start]
@@ -379,7 +376,7 @@ def plot_moving_average(df: pd.DataFrame,
     Returns:
     chart (altair.Chart): Altair line chart of the moving average
     """
-    df['Date'] = pd.to_datetime(df['Date'])
+    # df['Date'] = pd.to_datetime(df['Date'])
     start = pd.to_datetime(window[0])
     stop = pd.to_datetime(window[1])
     df = df[df['Date'] >= start]
@@ -421,7 +418,7 @@ def plot_bollinger_bands(df: pd.DataFrame,
     company = df['Symbol'].iloc[0]
 
     # Filter data to specified stock and date range
-    df['Date'] = pd.to_datetime(df['Date'])
+    # df['Date'] = pd.to_datetime(df['Date'])
     start = pd.to_datetime(window[0])
     stop = pd.to_datetime(window[1])
     df = df[df['Date'] >= start]
@@ -489,7 +486,7 @@ def plot_RSI(df: pd.DataFrame,
     Returns:
     plt (plt.subplot): RSI chart
     """
-    start = pd.to_datetime(start)
+    # start = pd.to_datetime(start)
     df = df[df['Date'] >= start]
     company = df['Symbol'].iloc[0]
     fig, axs = plt.subplots(
@@ -524,7 +521,7 @@ def plot_MACD(df: pd.DataFrame,
     """
     company = df['Symbol'].iloc[0]
     df = df[df['Symbol'] == company]
-    df['Date'] = pd.to_datetime(df['Date'])
+    # df['Date'] = pd.to_datetime(df['Date'])
     start = pd.to_datetime(window[0])
     stop = pd.to_datetime(window[1])
     df = df[df['Date'] >= start]
@@ -590,39 +587,12 @@ def get_stock_data(symbol: str
     Parameters:
     symbol (str): Stock symbol to get data for
     """
-    start_date = '2010-01-01'
-    stock_df = yf.download(symbol, start=start_date)
+    stock = yf.Ticker(symbol)
+    stock_df = stock.history(period='10y', interval='1d')
     stock_df['Symbol'] = symbol
     stock_df.reset_index(inplace=True)
-    if (stock_df['Date'].tail(1).values != datetime.datetime.now().strftime('%Y-%m-%d')):
-        try:
-            stock = yf.Ticker(symbol)
-            data = stock.history(period='1d', interval='1d')
-        except:
-            stock = yf.Ticker(symbol)
-
-            data = stock.history(period='1d', interval='1d')
-
-        if not data.empty:
-            latest_data = data.iloc[-1]
-            time = latest_data.name
-            open_price = latest_data['Open']
-            high = latest_data['High']
-            low = latest_data['Low']
-            close = latest_data['Close']
-            volume = latest_data['Volume']
-            new_row = pd.DataFrame({
-                'Symbol': [symbol],
-                'Date': [datetime.datetime.strftime(time, '%Y-%m-%d')],
-                'Open': [open_price],
-                'High': [high],
-                'Low': [low],
-                'Close': [close],
-                'Volume': [volume]
-            })
-
-            new_row = new_row.reset_index(drop=True)
-
-            stock_df = pd.concat([stock_df, new_row],
-                                 ignore_index=True).fillna(0)
+    
     return stock_df
+
+if __name__ == '__main__':
+    get_stock_data('AAPL')
