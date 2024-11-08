@@ -269,7 +269,9 @@ def plot_closing_price(df: pd.DataFrame,
         y='Close:Q',
         tooltip=['Date:T', 'Close:Q']
     ).properties(
-        title=f'Closing Prices of {company}'
+        title=f'Closing Prices of {company}',
+        width=1000,
+        height=600
     )
 
     return chart
@@ -390,8 +392,8 @@ def plot_moving_average(df: pd.DataFrame,
                     'Golden_Cross_Short:O', 'Death_Cross_Long:O', 'Golden_Cross_Long:O'])
     ).properties(
         title=f'{company} Moving Average {term}',
-        width=800,
-        height=400
+        width=1000,
+        height=600
     ).interactive(
         bind_y=False
     )
